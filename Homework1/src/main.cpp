@@ -173,11 +173,16 @@ uchar *upSampleNearest(int ratio, const uchar *srcImg, int rows, int cols)
 		/// corresponding i on source image, (int)(number + 0.5) => round(number)
 		// int iSrc = (int) ((double) i / ratio + 0.5);
 		int iSrc = cvRound(static_cast<double>(i) / ratio);
+		// when i==rowsUp - 1; iSrc == cvRound(rows*ratio-1)/ratio == rows, which is beyond boundary
+		if (iSrc >= rows - 1) { iSrc = rows - 1; }
+
 		for (int j = 0; j < colsUp; ++j)
 		{
 			/// corresponding j on source image, (int)(number + 0.5) => round(number)
 			// int jSrc = (int) ((double) j / ratio + 0.5);
 			int jSrc = cvRound(static_cast<double>(j) / ratio);
+			// when j==colsUp - 1; jSrc == cvRound(cols*ratio-1)/ratio == cols, which is beyond boundary
+			if (jSrc >= cols - 1) { jSrc = cols - 1; }
 			*(upImg + i * colsUp + j) = *(srcImg + iSrc * cols + jSrc);
 		}
 	}

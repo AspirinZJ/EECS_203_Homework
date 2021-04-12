@@ -7,4 +7,5 @@ find_package(OpenCV 3.2 REQUIRED)
 
 add_executable(subsample_and_interpolate src/subsample_and_interpolate.c)
 
-add_executable(main src/main.c)
+add_executable(main src/main.cpp)
+target_link_libraries(main ${OpenCV_LIBS})

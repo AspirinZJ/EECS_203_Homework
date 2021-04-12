@@ -1,38 +1,60 @@
-// Created by jackzhang on 4/4/21.
+/** @file       main.cpp.c
+ *  @author     jackzhang
+ *  @version    1.0
+ *  @date       04/4/5/21/2021
+ *  @brief      Subsample image and upsample image using nearest interpolation
+ *  @details    Read and write .raw format image file. Subsample image. Upsample image using nearest interpolation.
+ *  			Convert to jpg image and save.
+ *  @note       
+ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
+#include <iostream>
+#include <opencv2/opencv.hpp>
+
+#include <cstdio>
+#include <cstdlib>
 
 #define ROWS 480
 #define COLS 640
 
-typedef unsigned char uchar;
+// typedef unsigned char uchar;
 
 bool loadRawImage(const char *fileName, uchar *image, int rows, int cols);
 bool saveRawImage(const char *fileName, uchar *image, int rows, int cols);
 uchar *subSample(int ratio, const uchar *srcImg, int rows, int cols);
 uchar *upSampleNearest(int ratio, const uchar *srcImg, int rows, int cols);
-int main(int argc, char *argv[])
+cv::Mat array2cvMat(const uchar *image, int rows, int cols);
+
+
+int main(int argc, char **argv)
 {
 	// uchar image[ROWS][COLS];
-	uchar *image = (uchar *) malloc(sizeof(uchar) * ROWS * COLS);
+	auto *image = (uchar *) malloc(sizeof(uchar) * ROWS * COLS); // allocate memory for image
 
 	if (argc != 2)
 	{
 		fprintf(stderr, "usage: %s image_name\n", argv[0]);
 		exit(1);
 	}
-	if (loadRawImage(argv[1], image, ROWS, COLS)) { printf("Load image successfully!\n"); }
-	if (saveRawImage("../cat_copy.raw", image, ROWS, COLS)) { printf("Save image successfully!\n"); }
+	if (loadRawImage(argv[1], image, ROWS, COLS)) { std::cout << "Load image successfully!\n"; }
 
+	int ratio = 16;    // zoom and shrink ratio
 
-	uchar *subImg = subSample(4, image, ROWS, COLS);
-	if (saveRawImage("../subImg.raw", subImg, ROWS / 4, COLS / 4)) { printf("Save subimage successfully!\n"); }
+	uchar *subImg = subSample(ratio, image, ROWS, COLS); // subsample original with the ratio
+	uchar *upImg = upSampleNearest(ratio, subImg, ROWS / ratio, COLS / ratio); // upsample the subsampled image
 
-	uchar *upImg = upSampleNearest(4, subImg, ROWS / 4, COLS / 4);
-	if (saveRawImage("../upImg.raw", upImg, ROWS, COLS)) { printf("Save upimage successfully!\n"); }
+	cv::Mat subImgMat = array2cvMat(subImg, ROWS / ratio, COLS / ratio);
+	cv::Mat upImgMat = array2cvMat(upImg, ROWS, COLS);
+
+	std::string subImgName("../subImg_ratio_");
+	std::stringstream ss;
+	ss << ratio;
+	subImgName.append(ss.str());
+	if (cv::imwrite(subImgName + ".jpg", subImgMat)) { std::cout << "write subsampled image successfully!\n"; }
+
+	std::string upImgName("../upImg_ratio_");
+	upImgName.append(ss.str());
+	if (cv::imwrite(upImgName + ".jpg", upImgMat)) { std::cout << "write upsampled image successfully!\n"; }
 
 	free(subImg);
 	free(upImg);
@@ -49,13 +71,13 @@ int main(int argc, char *argv[])
 bool loadRawImage(const char *fileName, uchar *image, int rows, int cols)
 {
 	FILE *filePtr = fopen(fileName, "rb");
-	if (NULL == filePtr)
+	if (nullptr == filePtr)
 	{
 		fprintf(stderr, "Error: cannot open %s\n", fileName);
 		return false;
 	}
 
-	for (int i = 0; i < rows; ++i)
+	for (int i = 0; i < rows; ++i) // read data row-by-row
 	{
 		if (cols != fread(image + cols * i, 1, cols, filePtr))
 		{
@@ -64,7 +86,6 @@ bool loadRawImage(const char *fileName, uchar *image, int rows, int cols)
 		}
 	}
 	fclose(filePtr);
-
 	return true;
 }
 
@@ -78,17 +99,17 @@ bool loadRawImage(const char *fileName, uchar *image, int rows, int cols)
 bool saveRawImage(const char *fileName, uchar *image, int rows, int cols)
 {
 	FILE *filePtr = fopen(fileName, "wb");
-	if (NULL == filePtr)
+	if (nullptr == filePtr)
 	{
 		fprintf(stderr, "Error: cannot open %s\n", fileName);
 		return false;
 	}
-	for (int i = 0; i < rows; ++i)
+
+	for (int i = 0; i < rows; ++i) // save image row-by-row
 	{
 		fwrite(image + i * cols, 1, cols, filePtr);
 	}
 	fclose(filePtr);
-
 	return true;
 }
 
@@ -111,12 +132,14 @@ uchar *subSample(int ratio, const uchar *srcImg, int rows, int cols)
 	int rowsSub = rows / ratio;
 	int colsSub = cols / ratio;
 
-	uchar *subImg = (uchar *) malloc(sizeof(uchar) * rowsSub * colsSub);
+	auto *subImg = (uchar *) malloc(sizeof(uchar) * rowsSub * colsSub);
 	for (int i = 0; i < rowsSub; ++i)
 	{
+		int iSrc = i * ratio; // corresponding position on the source image
 		for (int j = 0; j < colsSub; ++j)
 		{
-			*(subImg + colsSub * i + j) = *(srcImg + colsSub * ratio * i * ratio + ratio * j);
+			int jSrc = j * ratio; // corresponding position on the source image
+			*(subImg + colsSub * i + j) = *(srcImg + cols * iSrc + jSrc);
 			// memcpy(subImg + colsSub * i + j, srcImg + colsSub * ratio * i * ratio + j * ratio, 1);
 		}
 	}
@@ -143,20 +166,49 @@ uchar *upSampleNearest(int ratio, const uchar *srcImg, int rows, int cols)
 	int rowsUp = rows * ratio; // rows after upscaling
 	int colsUp = cols * ratio; // cols after upscaling
 
-	uchar *upImg = (uchar *) malloc(sizeof(uchar) * rowsUp * colsUp);
+	auto *upImg = (uchar *) malloc(sizeof(uchar) * rowsUp * colsUp);
 
 	for (int i = 0; i < rowsUp; ++i)
 	{
 		/// corresponding i on source image, (int)(number + 0.5) => round(number)
-		int iSrc = (int) ((double) i / ratio + 0.5);
+		// int iSrc = (int) ((double) i / ratio + 0.5);
+		int iSrc = cvRound(static_cast<double>(i) / ratio);
+		// when i==rowsUp - 1; iSrc == cvRound(rows*ratio-1)/ratio == rows, which is beyond boundary
+		if (iSrc >= rows - 1) { iSrc = rows - 1; }
+
 		for (int j = 0; j < colsUp; ++j)
 		{
 			/// corresponding j on source image, (int)(number + 0.5) => round(number)
-			int jSrc = (int) ((double) j / ratio + 0.5);
-
+			// int jSrc = (int) ((double) j / ratio + 0.5);
+			int jSrc = cvRound(static_cast<double>(j) / ratio);
+			// when j==colsUp - 1; jSrc == cvRound(cols*ratio-1)/ratio == cols, which is beyond boundary
+			if (jSrc >= cols - 1) { jSrc = cols - 1; }
 			*(upImg + i * colsUp + j) = *(srcImg + iSrc * cols + jSrc);
 		}
 	}
 
 	return upImg;
+}
+
+/**
+ * save an array in the memory to jpg file
+ * @param image image array
+ * @param rows image rows
+ * @param cols image columns
+ * @return openCV Mat
+ */
+cv::Mat array2cvMat(const uchar *image, int rows, int cols)
+{
+	cv::Mat imgMat(rows, cols, CV_8UC1);    // 8bit unsigned char, 1 channel(gray)
+
+	for (int i = 0; i < rows; ++i)
+	{
+		auto *pixelPtr = imgMat.ptr<uchar>(i); // pointer pointing to the first pixel in a row
+		for (int j = 0; j < cols; ++j)
+		{
+			*(pixelPtr + j) = *(image + i * cols + j);
+		}
+	}
+
+	return imgMat;
 }

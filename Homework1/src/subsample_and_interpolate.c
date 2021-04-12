@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <math.h>
 
 #define ROWS 480
 #define COLS 640
@@ -13,8 +12,8 @@ typedef unsigned char uchar;
 
 bool loadRawImage(const char *fileName, uchar *image, int rows, int cols);
 bool saveRawImage(const char *fileName, uchar *image, int rows, int cols);
-uchar *subSample(int ratio, uchar *srcImg, int rows, int cols);
-uchar *upSampleNearest(int ratio, uchar *srcImg, int rows, int cols);
+uchar *subSample(int ratio, const uchar *srcImg, int rows, int cols);
+uchar *upSampleNearest(int ratio, const uchar *srcImg, int rows, int cols);
 
 int main(int argc, char *argv[])
 {
@@ -102,7 +101,7 @@ bool saveRawImage(const char *fileName, uchar *image, int rows, int cols)
  * @param cols the number of original image columns
  * @return the subsampled image
  */
-uchar *subSample(int ratio, uchar *srcImg, int rows, int cols)
+uchar *subSample(int ratio, const uchar *srcImg, int rows, int cols)
 {
 	if (ratio <= 0)
 	{
@@ -119,7 +118,7 @@ uchar *subSample(int ratio, uchar *srcImg, int rows, int cols)
 		for (int j = 0; j < colsSub; ++j)
 		{
 			*(subImg + colsSub * i + j) = *(srcImg + colsSub * ratio * i * ratio + ratio * j);
-			//			memcpy(subImg + colsSub * i + j, srcImg + colsSub * ratio * i * ratio + j * ratio, 1);
+			// memcpy(subImg + colsSub * i + j, srcImg + colsSub * ratio * i * ratio + j * ratio, 1);
 		}
 	}
 
@@ -134,7 +133,7 @@ uchar *subSample(int ratio, uchar *srcImg, int rows, int cols)
  * @param cols source image columns
  * @return upscaled image
  */
-uchar *upSampleNearest(int ratio, uchar *srcImg, int rows, int cols)
+uchar *upSampleNearest(int ratio, const uchar *srcImg, int rows, int cols)
 {
 	if (ratio <= 0)
 	{

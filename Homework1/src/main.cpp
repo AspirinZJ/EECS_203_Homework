@@ -191,7 +191,7 @@ uchar *upSampleNearest(int ratio, const uchar *srcImg, int rows, int cols)
 }
 
 /**
- * save an array in the memory to jpg file
+ * convert an array in the memory to cv::Mat object
  * @param image image array
  * @param rows image rows
  * @param cols image columns

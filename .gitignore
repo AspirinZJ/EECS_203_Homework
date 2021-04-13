@@ -3,3 +3,4 @@
 *.pp3
 **/build/*
 **/.vscode/*
+**/.gradle/*

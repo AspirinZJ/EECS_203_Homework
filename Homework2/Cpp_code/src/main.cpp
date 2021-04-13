@@ -97,13 +97,11 @@ void grayLevelTransformation(cv::Mat &image)
 void histogramEqualization(cv::Mat &image)
 {
 	// get histogram of source image
-	// TODO: free it
 	int *histSrc = getHistogram(std::ref(image), L);
 	plotSave(histSrc, L, "source image histogram", "../histogram_original.png");
 
 	// get cumulative distribution of source image
 
-	// TODO: free it
 	int *cumuDistSrc = getCumuDist(histSrc, L);
 	plotSave(cumuDistSrc, L, "source image cumulative distribution", "../cumulative_dist_original.png");
 
@@ -149,12 +147,16 @@ void histogramEqualization(cv::Mat &image)
 	cv::waitKey(0);
 
 	// get histogram of histogram-equalized image
-	// TODO: free it
 	int *histDst = getHistogram(std::ref(histEquImg), L);
 	plotSave(histDst, L, "output image histogram", "../histogram_output.png");
 
-	int *cumuDst = getCumuDist(histDst, L);
-	plotSave(cumuDst, L, "output image cumulative distribution", "../cumulative_dist_output.png");
+	int *cumuDistDst = getCumuDist(histDst, L);
+	plotSave(cumuDistDst, L, "output image cumulative distribution", "../cumulative_dist_output.png");
+
+	delete[] histSrc;
+	delete[] cumuDistSrc;
+	delete[] histDst;
+	delete[] cumuDistDst;
 }
 
 /**

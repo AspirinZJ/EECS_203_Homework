@@ -11,8 +11,13 @@ if (${Python2_FOUND})
     include_directories(${Python2_INCLUDE_DIRS})
 endif ()
 
-add_library(imageUtils src/imageUtils.cpp)
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
-add_executable(main src/main.cpp src/matplotlibcpp.h)
+add_library(imageUtils lib/imageUtils.cpp)
+
+add_executable(main src/main.cpp include/matplotlibcpp.h)
 target_link_libraries(main
         ${OpenCV_LIBS} imageUtils ${Python2_LIBRARIES})
+
+add_executable(histEquOpenCV src/OpenCVHistogramEqualization.cpp)
+target_link_libraries(histEquOpenCV ${OpenCV_LIBS} imageUtils)

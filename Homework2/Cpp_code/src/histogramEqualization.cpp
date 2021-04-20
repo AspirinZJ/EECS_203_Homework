@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <memory>
 
 #include "imageUtils.h"
 #include "matplotlibcpp.h"
@@ -56,11 +57,11 @@ int main(int argc, char **argv)
 void histEqu1(cv::Mat &imgSrc)
 {
 	// get histogram of source image
-	int *histSrc = getHistogram(imgSrc, L);
-	plot(histSrc, L, "source image histogram");
+	std::shared_ptr<int> histSrc(getHistogram(imgSrc, L));
+	plot(histSrc.get(), L, "source image histogram");
 	// get cumulative distribution of source image
-	int *cumuDistSrc = getCumuDist(histSrc, L);
-	plot(cumuDistSrc, L, "source image cumulative distribution");
+	std::shared_ptr<int> cumuDistSrc(getCumuDist(histSrc.get(), L));
+	plot(cumuDistSrc.get(), L, "source image cumulative distribution");
 	int cumuDistDesired[L] = {0};
 	double sumDesired = 0;
 	double binNum = static_cast<double>(ROWS) * COLS / L; // the number of pixel each gray level has of desired output
@@ -75,15 +76,15 @@ void histEqu1(cv::Mat &imgSrc)
 	for (int i = 0; i < L; ++i)
 	{
 		/// which element of desired cumulative distribution is closest to source cumulative distribution
-		int min = std::abs(cumuDistDesired[0] - cumuDistSrc[i]);
+		int min = std::abs(cumuDistDesired[0] - cumuDistSrc.get()[i]);
 		int minInd = 0;
 		for (int j = 1; j < L; ++j)
 		{
 			// find the gray level on desired cumulative distribution which is closet to the current cumulative distribution
-			if (std::abs(cumuDistDesired[j] - cumuDistSrc[i]) < min)
+			if (std::abs(cumuDistDesired[j] - cumuDistSrc.get()[i]) < min)
 			{
 				minInd = j;
-				min = std::abs(cumuDistDesired[j] - cumuDistSrc[i]);
+				min = std::abs(cumuDistDesired[j] - cumuDistSrc.get()[i]);
 			}
 		}
 		src2des[i] = minInd; // give the index of the closet gray level to the corresponding array element
@@ -101,16 +102,11 @@ void histEqu1(cv::Mat &imgSrc)
 	cv::waitKey(0);
 
 	// get the histogram of the output image
-	int *histDst = getHistogram(imgHistEqu, L);
-	plot(histDst, L, "histogram of the output image using method1");
+	std::shared_ptr<int> histDst(getHistogram(imgHistEqu, L));
+	plot(histDst.get(), L, "histogram of the output image using method1");
 	// get the cumulative distribution of the output image
-	int *cumuDistDst = getCumuDist(histDst, L);
-	plot(cumuDistDst, L, "cumulative distribution of the output image using method1");
-
-	delete[] histSrc;
-	delete[] histDst;
-	delete[] cumuDistSrc;
-	delete[] cumuDistDst;
+	std::shared_ptr<int> cumuDistDst(getCumuDist(histDst.get(), L));
+	plot(cumuDistDst.get(), L, "cumulative distribution of the output image using method1");
 }
 
 /**
@@ -121,18 +117,18 @@ void histEqu1(cv::Mat &imgSrc)
 void histEqu2(cv::Mat &imgSrc)
 {
 	// get histogram of source image
-	int *histSrc = getHistogram(imgSrc, L);
-	plot(histSrc, L, "source image histogram");
+	std::shared_ptr<int> histSrc(getHistogram(imgSrc, L));
+	plot(histSrc.get(), L, "source image histogram");
 	// get cumulative distribution of source image
-	int *cumuDistSrc = getCumuDist(histSrc, L);
-	plot(cumuDistSrc, L, "source image cumulative distribution");
+	std::shared_ptr<int> cumuDistSrc(getCumuDist(histSrc.get(), L));
+	plot(cumuDistSrc.get(), L, "source image cumulative distribution");
 
 	// 1. map the original cumulative distribution to [0, maxGrayLevel]
-	double scale = static_cast<double>(L - 1) / *(cumuDistSrc + L - 1);
+	double scale = static_cast<double>(L - 1) / *(cumuDistSrc.get() + L - 1);
 	int src2des2[L]{};
 	for (int i = 0; i < L; ++i)
 	{
-		src2des2[i] = static_cast<int>(round(scale * *(cumuDistSrc + i)));
+		src2des2[i] = static_cast<int>(round(scale * *(cumuDistSrc.get() + i)));
 	}
 	plot(src2des2, L, "src2des2");
 
@@ -145,15 +141,10 @@ void histEqu2(cv::Mat &imgSrc)
 	cv::imshow("histogram equalized image using OpenCV equalizeHist method", imgHistEqu2);
 	cv::waitKey(0);
 
-	int *histDst = getHistogram(imgHistEqu2, L);
-	plot(histDst, L, "histogram distribution of output image using method2");
-	int *cumuDistDst = getCumuDist(histDst, L);
-	plot(cumuDistDst, L, "cumulative distribution of output image using method2");
-
-	delete[] histSrc;
-	delete[] histDst;
-	delete[] cumuDistSrc;
-	delete[] cumuDistDst;
+	std::shared_ptr<int> histDst(getHistogram(imgHistEqu2, L));
+	plot(histDst.get(), L, "histogram distribution of output image using method2");
+	std::shared_ptr<int> cumuDistDst(getCumuDist(histDst.get(), L));
+	plot(cumuDistDst.get(), L, "cumulative distribution of output image using method2");
 }
 
 

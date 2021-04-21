@@ -19,3 +19,6 @@ target_link_libraries(opencvFilters PRIVATE ${OpenCV_LIBS})
 add_executable(medianFilter src/medianFilter.cpp)
 target_link_libraries(medianFilter PRIVATE
         ${OpenCV_LIBS} imageUtils)
+
+add_executable(opencvMedianFilter src/opencvMedianFilter.cpp)
+target_link_libraries(opencvMedianFilter PRIVATE ${OpenCV_LIBS})

@@ -67,7 +67,7 @@ cv::Mat linearAvgFilter(cv::Mat &image, int kernelSize, const std::string &paddi
 					}
 				}
 
-				std::sort(vnPixelVal.begin(), vnPixelVal.begin());
+				std::sort(vnPixelVal.begin(), vnPixelVal.end());
 				imgDst.at<uchar>(i, j) = static_cast<uchar>(vnPixelVal.at(kernelSize * kernelSize / 2));
 			}
 		}

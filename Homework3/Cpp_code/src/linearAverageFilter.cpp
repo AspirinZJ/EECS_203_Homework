@@ -14,7 +14,7 @@
 #define ROWS 480
 #define COLS 640
 
-cv::Mat medianFilter(const cv::Mat &imgSrc, int kernelSize, const std::string &paddingMethod);
+cv::Mat linearAvgFilter(const cv::Mat &imgSrc, int kernelSize, const std::string &paddingMethod);
 
 int main()
 {
@@ -24,7 +24,7 @@ int main()
 	if (loadRawImage(imagePath, image, ROWS, COLS)) { std::cout << "Load image successfully!\n"; }
 	cv::Mat imgSrc = array2cvMat(image, ROWS, COLS);
 
-	cv::Mat imgFiltered = medianFilter(imgSrc, 11, "replicate");
+	cv::Mat imgFiltered = linearAvgFilter(imgSrc, 11, "replicate");
 	cv::imshow("output image", imgFiltered);
 	cv::waitKey(0);
 
@@ -38,7 +38,7 @@ int main()
  * @param paddingMethod const std::string &: padding method
  * @return cv::Mat: image processed by the filter
  */
-cv::Mat medianFilter(const cv::Mat &imgSrc, int kernelSize, const std::string &paddingMethod)
+cv::Mat linearAvgFilter(const cv::Mat &imgSrc, int kernelSize, const std::string &paddingMethod)
 {
 	if (kernelSize % 2 != 1) // kernel size must be an odd number
 	{

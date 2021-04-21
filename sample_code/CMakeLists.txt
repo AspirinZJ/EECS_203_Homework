@@ -23,3 +23,12 @@ add_executable(main src/main.cpp src/matplotlibcpp.h)
 target_link_libraries(main ${OpenCV_LIBS} imageUtils ${Python2_LIBRARIES})
 
 add_executable(namespaceDemo src/namespaceDemo.cpp)
+
+add_executable(linearAvgFilter src/linearAvgFilter.cpp)
+target_link_libraries(linearAvgFilter ${OpenCV_LIBS})
+
+add_executable(structDemo src/structDemo.cpp)
+
+add_executable(memoryDemo src/memoryDemo.cpp)
+
+add_executable(ref src/referenceDemo.cpp)

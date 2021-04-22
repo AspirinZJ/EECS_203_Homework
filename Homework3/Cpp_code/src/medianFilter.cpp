@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 	cv::Mat imgFiltered = medianFilter(imgSrc, 11, "replicate");
 	cv::imshow("output image", imgFiltered);
 	cv::waitKey(0);
-	cv::imwrite("..images_out/image_median.png", imgFiltered);
+	cv::imwrite("../images_out/image_median.png", imgFiltered);
 
 	// get the histogram of output image
 	std::vector<int> vHistFiltered = getHistogram(imgFiltered, L);

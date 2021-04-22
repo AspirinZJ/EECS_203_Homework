@@ -14,16 +14,19 @@
 #include <algorithm>
 
 #include "imageUtils.h"
+#include "matplotlibcpp.h"
 
 #define ROWS 480
 #define COLS 640
+#define L 256 // grayscale
 
 cv::Mat medianFilter(const cv::Mat &imgSrc, int kernelSize, const std::string &paddingMethod);
+std::vector<int> getHistogram(cv::Mat &image, int grayScale);
 
-int main()
+int main(int argc, char **argv)
 {
 	// load image and convert it to cv::Mat format
-	const char *imagePath = "../images/cat.raw";
+	const char *imagePath = 2 == argc ? argv[1] : "../images/triangle.raw";
 	auto *image = static_cast<uchar *>(malloc(sizeof(uchar) * ROWS * COLS));
 	if (loadRawImage(imagePath, image, ROWS, COLS)) { std::cout << "Load image successfully!\n"; }
 	cv::Mat imgSrc = array2cvMat(image, ROWS, COLS);
@@ -32,6 +35,15 @@ int main()
 	cv::Mat imgFiltered = medianFilter(imgSrc, 11, "replicate");
 	cv::imshow("output image", imgFiltered);
 	cv::waitKey(0);
+	cv::imwrite("..images_out/image_median.png", imgFiltered);
+
+	// get the histogram of output image
+	std::vector<int> vHistFiltered = getHistogram(imgFiltered, L);
+	matplotlibcpp::figure();
+	matplotlibcpp::bar(vHistFiltered);
+	matplotlibcpp::title("output image histogram");
+	matplotlibcpp::savefig("../images_out/filtered_image_hist.png");
+	matplotlibcpp::show();
 
 	return 0;
 }
@@ -66,19 +78,36 @@ cv::Mat medianFilter(const cv::Mat &imgSrc, int kernelSize, const std::string &p
 			for (int j = 0; j < imgDst.cols; ++j)
 			{
 				// apply median filter within the kernel range
-				std::vector<int> vnPixelVal;	// vector storing the pixel value with the kernel range
+				std::vector<int> vnPixelVal;    // vector storing the pixel value with the kernel range
 				for (int p = -paddingSize; p <= paddingSize; ++p)
 				{
 					for (int q = -paddingSize; q <= paddingSize; ++q)
 					{
-						vnPixelVal.push_back(imgPad.at<uchar>(i+paddingSize+p, j+paddingSize+q));
+						vnPixelVal.push_back(imgPad.at<uchar>(i + paddingSize + p, j + paddingSize + q));
 					}
 				}
 				std::sort(vnPixelVal.begin(), vnPixelVal.end());
-				imgDst.at<uchar>(i, j) = static_cast<uchar>(vnPixelVal.at(kernelSize*kernelSize/2));
+				imgDst.at<uchar>(i, j) = static_cast<uchar>(vnPixelVal.at(kernelSize * kernelSize / 2));
 			}
 		}
 
 		return imgDst;
 	}
+}
+
+/**
+ * Calculate the histogram from a cv::Mat image
+ * @param image cv::Mat: image
+ * @param grayScale int: gray scale
+ * @return std::vector<int>: histogram vector
+ */
+std::vector<int> getHistogram(cv::Mat &image, int grayScale)
+{
+	std::vector<int> vHist(grayScale); // initialize each element as 0 by default
+	for (int i = 0; i < image.rows; ++i)
+	{
+		for (int j = 0; j < image.cols; ++j) { ++(vHist.at(image.at<uchar>(i, j))); }
+	}
+
+	return vHist;
 }

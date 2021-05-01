@@ -1,0 +1,2 @@
+add_executable(encapsulation encapsulation.cpp)
+add_executable(object_properties object_properties.cpp)

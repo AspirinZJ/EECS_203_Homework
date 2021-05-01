@@ -32,3 +32,9 @@ add_executable(structDemo src/structDemo.cpp)
 add_executable(memoryDemo src/memoryDemo.cpp)
 
 add_executable(ref src/referenceDemo.cpp)
+add_executable(function_high_level src/function_high_level.cpp)
+
+add_executable(speed_test src/speed_test_OpenCV.cpp)
+target_link_libraries(speed_test ${OpenCV_LIBS})
+
+add_subdirectory(src/Cpp)

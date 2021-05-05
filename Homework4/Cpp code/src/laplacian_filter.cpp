@@ -3,7 +3,7 @@
  *  @version    1.0
  *  @date       05/04/2021
  *  @brief      Apply Laplacian filter and sharpen filter based on laplacian
- *  @details    Laplacian kernel: [0, 1, 0; 1, -4, 1; 0, 1, 0]
+ *  @details    Laplacian kernel: [1, 1, 1; 1, -8, 1; 1, 1, 1]
  *  @note       
  */
 #include <iostream>
@@ -42,7 +42,9 @@ int main(int argc, char **argv)
 
 		for (int col = 1; col < imageLaplacian.cols - 1; ++col)
 		{
-			dst[col] = previous[col] + current[col - 1] - 4 * current[col] + current[col + 1] + next[col];
+			dst[col] = previous[col - 1] + previous[col] + previous[col + 1] +
+					   current[col - 1] - 8 * current[col] + current[col + 1] +
+					   next[col - 1] + next[col] + next[col + 1];
 		}
 	}
 
@@ -59,13 +61,13 @@ int main(int argc, char **argv)
 
 	imageLaplacianTrans.convertTo(imageLaplacianTrans, CV_8U);
 	cv::imshow("transformed laplacian", imageLaplacianTrans);
-	cv::imwrite("../images_out/laplacian_image.png", imageLaplacianTrans);
+	cv::imwrite("../images_output/laplacian_image.png", imageLaplacianTrans);
 
 	// subtract the original image by laplacian image get the sharpened image
 	cv::Mat imageSharpen = imageSrc(roi) - imageLaplacian(roi);
 	imageSharpen.convertTo(imageSharpen, CV_8U);
 	cv::imshow("sharpened image", imageSharpen);
-	cv::imwrite("../images_out/sharpened_image.png", imageSharpen);
+	cv::imwrite("../images_output/sharpened_image.png", imageSharpen);
 
 	cv::waitKey(0);
 	return 0;

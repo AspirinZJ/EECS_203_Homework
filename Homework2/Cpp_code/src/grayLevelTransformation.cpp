@@ -22,10 +22,11 @@
 int main()
 {
 	auto *image = static_cast<uchar *>(malloc(sizeof(uchar) * ROWS * COLS)); // allocate memory for image
-	if (loadRawImage("../images/cat.raw", image, ROWS, COLS)) { std::cout << "Load image successfully!\n"; }
+	if (loadRawImage("../images/triangle.raw", image, ROWS, COLS)) { std::cout << "Load image successfully!\n"; }
 	// convert uchar * array to cv::Mat image
 	cv::Mat imgSrc = array2cvMat(image, ROWS, COLS);
 	cv::imshow("source image", imgSrc);
+	cv::imwrite("../images/out_img.png", imgSrc);
 	cv::waitKey(0);
 
 	std::vector<int> grayLevelIn; // [0, L-1]

@@ -4,16 +4,18 @@
  *  @date       05/04/2021
  *  @brief      Discrete Fourier Transform with DC in the center
  *  @details    
- *  @note       
+ *  @note
+ *  @bug		TODO: fix the bug that the magnitude is not right
  */
 #include <iostream>
-#include <memory>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 
 
 void getSinCosTable(double *sinTable, double *cosTable, int rows, int cols);
-void getDFT(const uchar *image, double *realPart, double *imgPart, const double *sinTable, const double *cosTable, int rows, int cols);
+void
+getDFT(const uchar *image, double *realPart, double *imgPart, const double *sinTable, const double *cosTable, int rows,
+	   int cols);
 
 int main(int argc, char **argv)
 {
@@ -59,14 +61,14 @@ int main(int argc, char **argv)
 		auto *pixelPtr = magnitude.ptr<float>(row);
 		for (int col = 0; col < N; ++col)
 		{
-			pixelPtr[col] = sqrt(realPart[row*N + col] * realPart[row*N + col] + imgPart[row*N + col] * imgPart[row * N + col]);
+			pixelPtr[col] = sqrt(realPart[row * N + col] * realPart[row * N + col] +
+								 imgPart[row * N + col] * imgPart[row * N + col]);
 		}
 	}
 
 	magnitude.convertTo(magnitude, CV_8U);
 	cv::imshow("magnitude", magnitude);
 	cv::waitKey(0);
-
 
 
 	delete[] sinTable;
@@ -87,13 +89,13 @@ int main(int argc, char **argv)
  */
 void getSinCosTable(double *sinTable, double *cosTable, int rows, int cols)
 {
-	for (int x = 0; x <rows ; ++x)
+	for (int x = 0; x < rows; ++x)
 	{
 		for (int y = 0; y < cols; ++y)
 		{
 			double coeff = -2.0 * CV_PI * (1.0 * x / rows + 1.0 * y / cols);
-			sinTable[x*cols + y] = sin(coeff); // sinTable[x][y] => sinTable[x*cols + y] in 1D
-			cosTable[x*cols + y] = cos(coeff);
+			sinTable[x * cols + y] = sin(coeff); // sinTable[x][y] => sinTable[x*cols + y] in 1D
+			cosTable[x * cols + y] = cos(coeff);
 		}
 	}
 }
@@ -109,7 +111,9 @@ void getSinCosTable(double *sinTable, double *cosTable, int rows, int cols)
  * @param rows		int: number of rows
  * @param cols		int: number of columns
  */
-void getDFT(const uchar *image, double *realPart, double *imgPart, const double *sinTable, const double *cosTable, int rows, int cols)
+void
+getDFT(const uchar *image, double *realPart, double *imgPart, const double *sinTable, const double *cosTable, int rows,
+	   int cols)
 {
 	for (int u = 0; u < rows; ++u)
 	{
@@ -121,7 +125,7 @@ void getDFT(const uchar *image, double *realPart, double *imgPart, const double 
 			{
 				for (int y = 0; y < cols; ++y)
 				{
-					uchar pixelVal = *(image + x*cols + y);
+					uchar pixelVal = *(image + x * cols + y);
 					if (0 == pixelVal) { continue; }
 
 					// because of periodicity, e.g. (x + kM) / M => x / M
@@ -134,8 +138,10 @@ void getDFT(const uchar *image, double *realPart, double *imgPart, const double 
 				}
 			}
 			// TODO: whether to divide with MN
-			*(realPart + u*cols + v) = cosPart;
-			*(imgPart + u*cols + v) = sinPart;
+			*(realPart + u * cols + v) = cosPart;
+			*(imgPart + u * cols + v) = sinPart;
+			//			*(realPart + u * cols + v) = cosPart / rows / cols;
+			//			*(imgPart + u * cols + v) = sinPart / rows / cols;
 		}
 	}
 }

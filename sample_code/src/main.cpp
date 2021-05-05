@@ -4,6 +4,8 @@
 
 #include "imageUtils.h"
 #include "matplotlibcpp.h"
+#include <complex>
+#include <cmath>
 
 #define ROWS 480
 #define COLS 640
@@ -18,48 +20,54 @@ int main()
 	loadRawImage("../images/cat.raw", image, ROWS, COLS);
 	// 转换成opencv的格式
 	cv::Mat imgSrc = array2cvMat(image, ROWS, COLS);
-	cv::imshow("source image", imgSrc);
+	// cv::imshow("source image", imgSrc);
 
-	// 做一个映射， 把原始灰度映射到目标灰度
-	std::vector<double> grayLevelIn; // vector 存输入图像的灰度
-	for (int i = 0; i < L; ++i)
+	cv::Mat imgDst(imgSrc.size(), CV_32SC1);
+
+	// cv::Mat kernel = (cv::Mat_<int>(3, 3) << 1, 1, 1, 1, -8, 1, 1, 1, 1);
+	// cv::filter2D(imgSrc, imgDst, imgSrc.depth(), kernel, cv::Point(-1, -1), 0, cv::BORDER_DEFAULT);
+
+	for (int row = 0; row < imgSrc.rows; ++row)
 	{
-		grayLevelIn.push_back(i); //  插值
-	}
-
-	// 将原始图像灰度做0.4次方变换
-	std::vector<double> grayLevelGamma(grayLevelIn.begin(), grayLevelIn.end()); // 目标灰度
-	// lambda表达式
-	std::for_each(grayLevelGamma.begin(), grayLevelGamma.end(),
-				  [](double &ele) -> void { ele = pow(ele, 0.4); }); // for_each对vector每个元素都做相同的函数变换
-	// 把目标灰度限定到0～255
-	double maxElement = *std::max_element(grayLevelGamma.begin(), grayLevelGamma.end()); // 变换后的灰度最大值 -> 255
-	std::for_each(grayLevelGamma.begin(), grayLevelGamma.end(),
-				  [maxElement](double &ele) -> void { ele = round((L - 1) / maxElement * ele); });
-
-	matplotlibcpp::figure_size(700, 700);
-	matplotlibcpp::plot(grayLevelIn, grayLevelGamma);
-	matplotlibcpp::xlabel("r");
-	matplotlibcpp::ylabel("s");
-	matplotlibcpp::title("gamma = 0.4");
-	matplotlibcpp::xlim(0, 255);
-	matplotlibcpp::ylim(0, 255);
-	matplotlibcpp::show();
-	matplotlibcpp::savefig("../plot.png");
-
-
-	cv::Mat imgTrans(imgSrc); // 新建一个变换后的图像
-	for (int i = 0; i < imgSrc.rows; ++i)
-	{
-		for (int j = 0; j < imgSrc.cols; ++j)
+		for (int col = 0; col < imgSrc.cols; ++col)
 		{
-			// 转换，按照grayLevelIn -> grayLevelGamma 进行转换
-			// imgTrans.at<uchar>(i, j)表示imagTrans在i行j列的像素值
-			imgTrans.at<uchar>(i, j) = static_cast<uchar>(grayLevelGamma.at(imgSrc.at<uchar>(i, j))); // grayLevelGamma[imgSrc[i, j]]
+			// imgDst.at<uchar>(row, col) = 9 * imgSrc.at<uchar>(row, col) - imgSrc.at<uchar>(row -1, col-1) - imgSrc.at<uchar>(row, col-1)
 		}
 	}
-	cv::imshow("transformed image", imgTrans);
 
+	// find min number of imgDst
+
+	//	double minVal, maxVal;
+	//	cv::minMaxLoc(imgDst, &minVal, &maxVal);
+	//
+	//	imgDst -= minVal;
+	//
+	//	imgDst *= 255.0 / maxVal;
+
+
+	//	cv::imshow("output image", imgDst);
+	//	cv::waitKey(0);
+
+	cv::Mat test(3, 3, CV_8UC1);
+	for (int i = 0; i < 3; ++i)
+	{
+		for (int j = 0; j < 3; ++j)
+		{
+			test.at<uchar>(i, j) = i + j;
+		}
+	}
+
+//	std::cout << "test: " << test << std::endl;
+//
+//	test += 100;
+//	std::cout << "test: " << test << std::endl;
+
+std::complex<int> complex1 = 1 + std::literals::1i;
+
+	// cv::saturate_cast<uchar>()
+
+	// DFT
+	// Real Img
 
 	cv::waitKey(0);
 

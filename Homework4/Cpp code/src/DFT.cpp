@@ -7,8 +7,10 @@
  *  @note       
  */
 #include <iostream>
+#include <memory>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+
 
 void getSinCosTable(double *sinTable, double *cosTable, int rows, int cols);
 void getDFT(const uchar *image, double *realPart, double *imgPart, const double *sinTable, const double *cosTable, int rows, int cols);
@@ -28,11 +30,50 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	int M = imageSrc.cols, N = imageSrc.rows;
+	int M = imageSrc.rows, N = imageSrc.cols;
+	auto *sinTable = new double[M * N];
+	auto *cosTable = new double[M * N];
+
+	// calculate the sin and cos coefficients table
+	getSinCosTable(sinTable, cosTable, M, N);
+
+	auto *realPart = new double[M * N];
+	auto *imgPart = new double[M * N];
+
+	auto *imageArr = new uchar[M * N];
+
+	for (int row = 0; row < imageSrc.rows; ++row)
+	{
+		for (int col = 0; col < imageSrc.cols; ++col)
+		{
+			*(imageArr + row * imageSrc.cols + col) = imageSrc.ptr<uchar>(row)[col];
+		}
+	}
+
+	getDFT(imageArr, realPart, imgPart, sinTable, cosTable, M, N);
+
+	cv::Mat magnitude(M, N, CV_32F);
+
+	for (int row = 0; row < M; ++row)
+	{
+		auto *pixelPtr = magnitude.ptr<float>(row);
+		for (int col = 0; col < N; ++col)
+		{
+			pixelPtr[col] = sqrt(realPart[row*N + col] * realPart[row*N + col] + imgPart[row*N + col] * imgPart[row * N + col]);
+		}
+	}
+
+	magnitude.convertTo(magnitude, CV_8U);
+	cv::imshow("magnitude", magnitude);
+	cv::waitKey(0);
 
 
 
-
+	delete[] sinTable;
+	delete[] cosTable;
+	delete[] realPart;
+	delete[] imgPart;
+	delete[] imageArr;
 	return 0;
 }
 
@@ -72,6 +113,7 @@ void getDFT(const uchar *image, double *realPart, double *imgPart, const double 
 {
 	for (int u = 0; u < rows; ++u)
 	{
+		std::cout << "Finished row: " << u << std::endl;
 		for (int v = 0; v < cols; ++v)
 		{
 			double sinPart = 0, cosPart = 0;
@@ -91,6 +133,7 @@ void getDFT(const uchar *image, double *realPart, double *imgPart, const double 
 					cosPart += pixelVal * cosTable[ind];
 				}
 			}
+			// TODO: whether to divide with MN
 			*(realPart + u*cols + v) = cosPart;
 			*(imgPart + u*cols + v) = sinPart;
 		}

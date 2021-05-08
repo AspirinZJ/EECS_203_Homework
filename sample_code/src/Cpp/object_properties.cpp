@@ -4,44 +4,58 @@
  *  @date       05/01/2021
  *  @brief      构造函数和析构函数
  *  @details    构造函数和类型一致， 没有返回值， 不能写void
- *  @note       
+ *  @note       拷贝构造函数的调用时机: 1. 拷贝构造时， 2. 值传递对象给函数时, 3. 以值传递返回局部对象
  */
 #include <iostream>
 
+// 构造函数的类型
+// 有参构造和无参构造
+// 普通构造，拷贝构造和转换构造
 class Person
 {
 public:
 	Person()
 	{
-		mName = "NULL";
-		mAge = 22;
+		// std::cout << "Default constructor." << std::endl;
+	}  // 默认构造 无参构造
+	// Person(int age) : m_age(age) {}
+
+	// explicit 禁用转换构造函数
+	explicit Person(int age) // 转换构造函数 => 不包含explicit关键字的单参构造函数
+	{
+		m_age = age;
+		std::cout << "有参构造" << std::endl;
 	}
 
-	//	Person(std::string name, int age)
-	//	{
-	//		mName = name;
-	//		mAge = age;
-	//	}
-	// 初始化列表
-	Person(std::string name, int age) : mName(name), mAge(age) {}
+	// 拷贝构造
+	Person(const Person &person) : m_age(person.m_age) { std::cout << "copy constructor" << std::endl; }
 
-	explicit Person(std::string name) : mName(name) {}
+	// ~Person() { std::cout << "destructor" << std::endl; }
 
-	std::string mName;
-	int mAge = 20;
+public:
+	int m_age;
 };
+
+void test1(Person &person)
+{
+	person.m_age = 100;
+}
+
+Person test2()
+{
+	Person person(50);
+	return person;
+}
 
 int main()
 {
-	Person person("Jack", 25);
-	std::cout << person.mName << '\n' << person.mAge << std::endl;
-	// Person person2(); 有空构造函数时不能写（）
-	//	Person person2;
-	//	std::cout << person2.mName << '\n' << person2.mAge << std::endl;
-
-	Person person3("David");
-	// Person person3 = std::string("David");
-	std::cout << person3.mName << '\n' << person3.mAge << std::endl;
+	//	Person person(20);
+	//	// Person person = 20;
+	//	// Person person1 = person;
+	//
+	//	test1(person);
+	//	std::cout << person.m_age << std::endl;
+	Person person = test2();
 
 
 	return 0;

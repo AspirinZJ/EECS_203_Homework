@@ -16,6 +16,8 @@ list(APPEND EXE_LIST DFT)
 add_executable(DFT_OpenCV src/DFT_OpenCV.cpp)
 list(APPEND EXE_LIST DFT_OpenCV)
 
+add_executable(test src/test.cpp)
+
 # add_executable(test src/test.cpp)
 # list(APPEND EXE_LIST test)
 

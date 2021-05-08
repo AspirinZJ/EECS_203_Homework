@@ -1,2 +1,4 @@
 add_executable(encapsulation encapsulation.cpp)
 add_executable(object_properties object_properties.cpp)
+add_executable(object_properties2 object_properties2.cpp)
+add_executable(shallow_deep_copy shallow_deep_copy.cpp)

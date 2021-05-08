@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 	}
 
 	// pad image to multiplication of 2 before discrete fourier transform
-	const int rowPad = cv::getOptimalDFTSize(imageSrc.rows); // get the optimal paading size
+	const int rowPad = cv::getOptimalDFTSize(imageSrc.rows); // get the optimal padding size
 	const int colPad = cv::getOptimalDFTSize(imageSrc.cols);
 
 	cv::Mat imagePad;

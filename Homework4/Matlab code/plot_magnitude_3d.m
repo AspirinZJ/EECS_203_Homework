@@ -1,6 +1,6 @@
 M = 100; N = 100;
-u = linspace(-M/2, M/2, M+1);
-v = linspace(-N/2, N/2, N+1);
+u = linspace(-M / 2, M / 2, M + 1); % create a vector from -M/2 to M/2, M + 1 points in total
+v = linspace(-N / 2, N / 2, N + 1);
 
 [uu, vv] = meshgrid(u, v); % uu and vv are matrice in size[M+1, N+1]
 
@@ -14,7 +14,6 @@ ylabel("v");
 zlabel("magnitude");
 title("magtnitude of the frequency response function");
 saveas(gcf, "./output_images/frequency_response", "png");
-
 
 magnitude2 = 2 * abs(cos(2 * pi * uu / M) + cos(2 * pi * vv / N) - 2);
 figure(2);

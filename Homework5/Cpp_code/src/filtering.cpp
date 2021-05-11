@@ -6,9 +6,8 @@
  *  @details    Apply arithmetic mean filter, geometric mean filter, harmonic mean filter, contraharmonic mean filter
  *  			median filter, max filter, min filter and midpoint filter
  *  @note
- *  @bug		for medianFilter function, the image is twisted, fix the bug
+ *  @bug
  */
-#include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -16,8 +15,6 @@
 void geometricMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize);
 void harmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize);
 void contraHarmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize, double coef);
-
-// TODO: image is twisted, fix it
 void medianFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize);
 
 int main()
@@ -82,8 +79,8 @@ int main()
 	for (int size: vKernelSize)
 	{
 		cv::Mat imageMedian(imageSrc.size(), imageSrc.type(), cv::Scalar::all(10));
-		//		medianFilter(imageSrc, imageMedian, size);
-		cv::medianBlur(imageSrc, imageMedian, size);
+		medianFilter(imageSrc, imageMedian, size);
+		// cv::medianBlur(imageSrc, imageMedian, size);
 
 		//		std::string winName("median filter");
 		//		winName += std::to_string(size);
@@ -126,14 +123,13 @@ int main()
 		cv::Mat imageMax, imageMin, imageMidpoint;
 
 		cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(size, size), cv::Point(-1, -1));
-		cv::dilate(imageSrc, imageMax, kernel);	// dilate the image => max filter
+		cv::dilate(imageSrc, imageMax, kernel);    // dilate the image => max filter
 		cv::erode(imageSrc, imageMin, kernel); // erode the image => min filter
+		imageMidpoint = (imageMax + imageMin) / 2;
 
-		imageMidpoint = (imageMax + imageMin ) / 2;
-
-		std::string winName("midpoint filter ");
-		winName += std::to_string(size);
-		cv::imshow(winName, imageMidpoint);
+		//		std::string winName("midpoint filter ");
+		//		winName += std::to_string(size);
+		//		cv::imshow(winName, imageMidpoint);
 	}
 
 	cv::waitKey(0);
@@ -165,12 +161,10 @@ void geometricMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelS
 					multiplication *= pow(imageSrc.at<uchar>(row + i, col + j), exponent);
 				}
 			}
-
 			imageDst.at<uchar>(row, col) = cv::saturate_cast<uchar>(multiplication);
 		}
 	}
 }
-
 
 /**
  * use harmonic mean filter to filter the image
@@ -200,7 +194,6 @@ void harmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSi
 	}
 }
 
-
 /**
  * use contra harmonic mean filter to filter the image
  * @param imageSrc 		const cv::Mat &: input image
@@ -211,7 +204,6 @@ void harmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSi
 void contraHarmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize, double coef)
 {
 	CV_Assert(kernelSize % 2); // kernel size must be odd number
-
 	const int halfSize = kernelSize / 2;
 
 	for (int row = halfSize; row < imageSrc.rows - halfSize; ++row)    // ignore the boundary pixels
@@ -228,12 +220,10 @@ void contraHarmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int ke
 					denominatorSum += pow(imageSrc.at<uchar>(row + i, col + j), coef);
 				}
 			}
-
 			imageDst.at<uchar>(row, col) = cv::saturate_cast<uchar>(numeratorSum / denominatorSum);
 		}
 	}
 }
-
 
 /**
  * Apply median filter to the image
@@ -261,8 +251,8 @@ void medianFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize)
 			{
 				for (int i = 0; i < region.rows; ++i)
 				{
-					vRegion.insert(vRegion.end(), region.ptr<uchar>(row),
-							region.ptr<uchar>(row) + region.cols * region.channels());
+					vRegion.insert(vRegion.end(), region.ptr<uchar>(i),
+							region.ptr<uchar>(i) + region.cols * region.channels());
 				}
 			}
 

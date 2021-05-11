@@ -41,3 +41,6 @@ add_subdirectory(src/Cpp)
 
 add_executable(laplacian src/laplacian.cpp)
 target_link_libraries(laplacian ${OpenCV_LIBS})
+
+add_executable(homework5 src/homework5.cpp)
+target_link_libraries(homework5 ${OpenCV_LIBS})

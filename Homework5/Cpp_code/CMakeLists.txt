@@ -7,6 +7,3 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(filtering src/filtering.cpp)
 target_link_libraries(filtering ${OpenCV_LIBS})
-
-add_executable(test src/test.cpp)
-target_link_libraries(test ${OpenCV_LIBS})

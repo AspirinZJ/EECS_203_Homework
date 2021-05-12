@@ -12,10 +12,12 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
+void arithmeticMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, cv::Size size);
 void geometricMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize);
 void harmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize);
 void contraHarmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize, double coef);
 void medianFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize);
+void maxFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize);
 
 int main()
 {
@@ -34,21 +36,22 @@ int main()
 	std::vector<int> vKernelSize = {3, 7, 9};
 	for (int size: vKernelSize)
 	{
-		cv::Mat imageArithmeticMean;
-		cv::blur(imageSrc, imageArithmeticMean, cv::Size(size, size));
-		//		std::string winName = "arithmetic mean ";
-		// cv::imshow(winName + std::to_string(size) + "x" + std::to_string(size), imageArithmeticMean);
+		cv::Mat imageArithmeticMean(imageSrc.size(), imageSrc.type(), CV_8UC1);
+		// cv::blur(imageSrc, imageArithmeticMean, cv::Size(size, size));
+		arithmeticMeanFilter(imageSrc, imageArithmeticMean, cv::Size(size, size));
+		std::string outName("../images/arithmetic_mean_kernel_");
+		outName += std::to_string(size) + ".png";
+		cv::imwrite(outName, imageArithmeticMean);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~geometric mean filter~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	for (int size: vKernelSize)
 	{
 		cv::Mat imageGeoMean(imageSrc.size(), imageSrc.type(), cv::Scalar::all(10));
-
 		geometricMeanFilter(imageSrc, imageGeoMean, size);
-		//		std::string winName("geometric mean ");
-		//		winName = std::to_string(size) + "x" + std::to_string(size);
-		//		cv::imshow(winName, imageGeoMean);
+		std::string outName("../images/geometric_mean_kernel_");
+		outName += std::to_string(size) + ".png";
+		cv::imwrite(outName, imageGeoMean);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~Harmonic Mean Filter~~~~~~~~~~~~~~~~~~~~~~~
@@ -56,9 +59,9 @@ int main()
 	{
 		cv::Mat imageHarmMean(imageSrc.size(), imageSrc.type(), cv::Scalar::all(10));
 		harmonicMeanFilter(imageSrc, imageHarmMean, size);
-		//				std::string winName("harmonic mean ");
-		//				winName += std::to_string(size) + "x" + std::to_string(size);
-		//				cv::imshow(winName, imageHarmMean);
+		std::string outName("../images/harmonic_mean_kernel_");
+		outName += std::to_string(size) + ".png";
+		cv::imwrite(outName, imageHarmMean);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~Contra harmonic mean filter ~~~~~~~~~~~~~~~~~~
@@ -68,10 +71,9 @@ int main()
 		{
 			cv::Mat imageContraHarmonicMean(imageSrc.size(), imageSrc.type(), cv::Scalar::all(10));
 			contraHarmonicMeanFilter(imageSrc, imageContraHarmonicMean, size, Q);
-
-			//			std::string winName("contra hamonic mean ");
-			//			winName += std::to_string(size) + "x" + std::to_string(size) + ". Q=" + std::to_string(Q);
-			//			cv::imshow(winName, imageContraHarmonicMean);
+			std::string outName("../images/contra_harmonic_mean_kernel_");
+			outName += std::to_string(size) + ".png";
+			cv::imwrite(outName, imageContraHarmonicMean);
 		}
 	}
 
@@ -82,9 +84,9 @@ int main()
 		medianFilter(imageSrc, imageMedian, size);
 		// cv::medianBlur(imageSrc, imageMedian, size);
 
-		//		std::string winName("median filter");
-		//		winName += std::to_string(size);
-		//		cv::imshow(winName, imageMedian);
+		std::string outName("../images/median_kernel_");
+		outName += std::to_string(size) + ".png";
+		cv::imwrite(outName, imageMedian);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~Max filter cv::dilate~~~~~~~~~~~~~~~~~~~~~~~~
@@ -94,12 +96,15 @@ int main()
 
 		// use cv::dilate to do the max filtering
 		// get the kernel(morphological shape)
-		cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(size, size), cv::Point(-1, -1));
-		cv::dilate(imageSrc, imageMax, kernel);
+		// cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(size, size), cv::Point(-1, -1));
+		// cv::dilate(imageSrc, imageMax, kernel);
 
-		//		std::string winName("max filter ");
-		//		winName += std::to_string(size);
-		//		cv::imshow(winName, imageMax);
+		// or implement it by ourselves
+		maxFilter(imageSrc, imageMax, size);
+
+		std::string outName("../images/max_kernel_");
+		outName += std::to_string(size) + ".png";
+		cv::imwrite(outName, imageMax);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~Min filter cv::erode~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,9 +117,9 @@ int main()
 		cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(size, size), cv::Point(-1, -1));
 		cv::erode(imageSrc, imageMin, kernel);
 
-		//		std::string winName("Min filter ");
-		//		winName += std::to_string(size);
-		//		cv::imshow(winName, imageMin);
+		std::string outName("../images/min_kernel_");
+		outName += std::to_string(size) + ".png";
+		cv::imwrite(outName, imageMin);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~Midpoint filter => mean of max filter and min filter~~~~~~~~~~~~~~
@@ -127,15 +132,42 @@ int main()
 		cv::erode(imageSrc, imageMin, kernel); // erode the image => min filter
 		imageMidpoint = (imageMax + imageMin) / 2;
 
-		//		std::string winName("midpoint filter ");
-		//		winName += std::to_string(size);
-		//		cv::imshow(winName, imageMidpoint);
+		std::string outName("../images/midpoint_kernel_");
+		outName += std::to_string(size) + ".png";
+		cv::imwrite(outName, imageMidpoint);
 	}
 
 	cv::waitKey(0);
 	return 0;
 }
 
+
+/**
+ * Apply arithmetic mean filter to the input image
+ * @param imageSrc 	const cv::Mat &: input image
+ * @param imageDst 	cv::Mat &: output image
+ * @param size		cv::Size &: kernel size
+ */
+void arithmeticMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, cv::Size size)
+{
+	CV_Assert(size.width == size.height); // for now can only process a squere shaped kernel
+	CV_Assert(size.width % 2);
+	const int halfSize = size.width / 2;
+
+	for (int row = halfSize; row < imageSrc.rows - halfSize; ++row)
+	{
+		for (int col = halfSize; col < imageSrc.cols - halfSize; ++col)
+		{
+			int sum = 0;
+			for (int i = -halfSize; i <= halfSize; ++i)
+			{
+				for (int j = -halfSize; j <= halfSize; ++j) { sum += imageSrc.at<uchar>(row + i, col + j); }
+			}
+
+			imageDst.at<uchar>(row, col) = cv::saturate_cast<uchar>(1.0 * sum / size.width / size.width);
+		}
+	}
+}
 
 /**
  * filter the input image with geometric mean filter
@@ -263,6 +295,42 @@ void medianFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize)
 			std::nth_element(vRegion.begin(), vRegion.begin() + static_cast<int>(vRegion.size()) / 2, vRegion.end());
 
 			imageDst.at<uchar>(row, col) = vRegion.at(vRegion.size() / 2);
+		}
+	}
+}
+
+/**
+ * apply max filter to the input image
+ * @param imageSrc		const cv::Mat &: input image
+ * @param imageDst 		cv::Mat &: output image
+ * @param kernelSize 	int: kernel size
+ */
+void maxFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize)
+{
+	CV_Assert(kernelSize % 2); // kernel size must be odd number
+	const int halfSize = kernelSize / 2;
+
+	for (int row = halfSize; row < imageSrc.rows - halfSize; ++row)
+	{
+		for (int col = halfSize; col < imageSrc.cols - halfSize; ++col)
+		{
+			cv::Rect region(col - halfSize, row - halfSize, kernelSize, kernelSize);
+			cv::Mat roi = imageSrc(region); // select the region of area , generally it is not continuous in memory
+
+			std::vector<uchar> vRoi;
+			if (roi.isContinuous()) // if it is continuous in memory, assign the value to the vector directly
+			{
+				vRoi.assign(roi.data, roi.data + roi.total() * roi.channels());
+			}
+			else // if is not continuous in memory , we need to assign the value row by row
+			{
+				for (int i = 0; i < roi.rows; ++i)
+				{
+					vRoi.insert(vRoi.end(), roi.ptr<uchar>(i), roi.ptr<uchar>(i) + roi.cols * roi.channels());
+				}
+			}
+			auto maxValInd = std::max_element(vRoi.begin(), vRoi.end());
+			imageDst.at<uchar>(row, col) = *maxValInd;
 		}
 	}
 }

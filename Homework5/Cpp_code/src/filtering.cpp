@@ -8,11 +8,12 @@
  *  @note
  *  @bug
  */
+#include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-void arithmeticMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, cv::Size size);
+void arithmeticMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, const cv::Size &size);
 void geometricMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize);
 void harmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize);
 void contraHarmonicMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize, double coef);
@@ -32,6 +33,9 @@ int main()
 		}
 	}
 
+	cv::Rect showRegion(19, 14, 19, 19);
+	std::cout << "original image region: \n" << imageSrc(showRegion) << std::endl;
+
 	// ~~~~~~~~~~~~~~arithmetic mean filter: cv::blur or cv::boxFilter~~~~~~~~~~~~~
 	std::vector<int> vKernelSize = {3, 7, 9};
 	for (int size: vKernelSize)
@@ -42,6 +46,9 @@ int main()
 		std::string outName("../images/arithmetic_mean_kernel_");
 		outName += std::to_string(size) + ".png";
 		cv::imwrite(outName, imageArithmeticMean);
+
+		// std::cout << "arithmetic mean kernel size: " << size << std::endl << imageArithmeticMean(showRegion)
+		// << std::endl;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~geometric mean filter~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,7 +79,7 @@ int main()
 			cv::Mat imageContraHarmonicMean(imageSrc.size(), imageSrc.type(), cv::Scalar::all(10));
 			contraHarmonicMeanFilter(imageSrc, imageContraHarmonicMean, size, Q);
 			std::string outName("../images/contra_harmonic_mean_kernel_");
-			outName += std::to_string(size) + ".png";
+			outName += std::to_string(size) + "_Q_" + std::to_string(Q) + ".png";
 			cv::imwrite(outName, imageContraHarmonicMean);
 		}
 	}
@@ -148,7 +155,7 @@ int main()
  * @param imageDst 	cv::Mat &: output image
  * @param size		cv::Size &: kernel size
  */
-void arithmeticMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, cv::Size size)
+void arithmeticMeanFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, const cv::Size &size)
 {
 	CV_Assert(size.width == size.height); // for now can only process a squere shaped kernel
 	CV_Assert(size.width % 2);
@@ -316,8 +323,8 @@ void maxFilter(const cv::Mat &imageSrc, cv::Mat &imageDst, int kernelSize)
 		{
 			cv::Rect region(col - halfSize, row - halfSize, kernelSize, kernelSize);
 			cv::Mat roi = imageSrc(region); // select the region of area , generally it is not continuous in memory
-
 			std::vector<uchar> vRoi;
+
 			if (roi.isContinuous()) // if it is continuous in memory, assign the value to the vector directly
 			{
 				vRoi.assign(roi.data, roi.data + roi.total() * roi.channels());

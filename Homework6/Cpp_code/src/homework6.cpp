@@ -13,9 +13,10 @@
 #include <opencv2/imgproc.hpp>
 
 inline cv::Vec2f complexDivision(const cv::Vec2f &num1, const cv::Vec2f &num2);
-cv::Mat getGaussianKernel(int rows, int cols, double sigma);
+cv::Mat calGaussianKernel(int rows, int cols, double sigma);
 cv::Mat discreteFourierTrans(const cv::Mat &mat);
 cv::Mat getDFTMagnitudeCentered(const cv::Mat &dftMat);
+void displayMagnitude(cv::Mat &magnitudeMat, const char *winTitle);
 cv::Mat complexImagesDivision(const cv::Mat &image1, const cv::Mat &image2);
 
 int main(int argc, char **argv)
@@ -29,33 +30,47 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	cv::Mat gaussianKernel = getGaussianKernel(31, 31, 7);
-	// std::cout << "Gaussian kernel: \n" << gaussianKernel << std::endl;
-
+	cv::Mat gaussianKernel = calGaussianKernel(31, 31, 7);
 	cv::Mat imageDegraded;
 	cv::filter2D(imageSrc, imageDegraded, imageSrc.depth(), gaussianKernel, cv::Point(-1, -1), 0, cv::BORDER_REPLICATE);
 	// cv::GaussianBlur(imageSrc, imageDegraded, cv::Size(31, 31), 7, 7, cv::BORDER_REPLICATE);
-
-	cv::Mat ftDegraded = discreteFourierTrans(imageDegraded);
-	cv::Mat ftGaussian = discreteFourierTrans(gaussianKernel);
 	// TODO: align the size of two matrices
+	cv::Size dftSize;
+	// calculate the size of DFT transform
+	dftSize.width = cv::getOptimalDFTSize(imageDegraded.cols + gaussianKernel.cols - 1);
+	dftSize.height = cv::getOptimalDFTSize(imageDegraded.rows + gaussianKernel.rows - 1);
 
-	//	cv::Mat ftImage = complexImagesDivision(ftDegraded, ftGaussian);
-	//
-	//	cv::Mat imageRestored;
-	//	cv::dft(ftImage, imageRestored, cv::DFT_INVERSE, cv::DFT_REAL_OUTPUT);
-	//
-	cv::Mat planes[2];
-	cv::split(ftDegraded, planes);
-	cv::magnitude(planes[0], planes[1], planes[0]);
-	cv::Mat mag = planes[0];
-	mag += cv::Scalar::all(1);
-	cv::log(mag, mag);
-	cv::normalize(mag, mag, 0, 1, CV_MINMAX);
-	cv::imshow("magnitude", mag);
-	// cv::imshow("degraded image", imageDegraded);
+	cv::Mat tempImage(dftSize, imageDegraded.type(), cv::Scalar::all(0));
+	cv::Mat tempGaussian(dftSize, gaussianKernel.type(), cv::Scalar::all(0));
+
+	// copy imageDegraded and gaussianKernel to the top-left corners
+	cv::Mat roiImage(tempImage, cv::Rect(0, 0, imageDegraded.cols, imageDegraded.rows));
+	imageDegraded.copyTo(roiImage);
+	cv::Mat roiGaussian(tempGaussian, cv::Rect(0, 0, gaussianKernel.cols, gaussianKernel.rows));
+	gaussianKernel.copyTo(roiGaussian);
+
+	// transform the padded imageDegraded and gaussianKernel in-place
+	cv::dft(cv::Mat_<float>(tempImage), tempImage, 0, imageDegraded.rows);
+	cv::dft(cv::Mat_<float>(tempGaussian), tempGaussian, 0, gaussianKernel.rows);
+
+	tempGaussian.inv();
+
+	// todo 4th parameter
+	cv::mulSpectrums(tempImage, tempGaussian, tempImage, cv::DFT_ROWS);
+
+	cv::Mat imageOut;
+	imageOut.create(cv::abs(imageDegraded.rows - gaussianKernel.rows) + 1,
+			cv::abs(imageDegraded.cols - gaussianKernel.cols) + 1, imageDegraded.type());
+	cv::dft(tempImage, tempImage, cv::DFT_INVERSE | cv::DFT_SCALE, imageOut.rows);
+
+	tempImage(cv::Rect(0, 0, imageOut.cols, imageOut.rows)).copyTo(imageOut);
+
+	cv::normalize(imageOut, imageOut, 0, 255, cv::NORM_MINMAX);
+	imageOut.convertTo(imageOut, CV_8UC1);
+	cv::imshow("output image", imageOut);
+
+
 	cv::waitKey(0);
-
 	return 0;
 }
 
@@ -80,7 +95,7 @@ inline cv::Vec2f complexDivision(const cv::Vec2f &num1, const cv::Vec2f &num2)
  * @param cols	int: number of columns
  * @return		cv::Mat: Gaussian kernel
  */
-cv::Mat getGaussianKernel(int rows, int cols, double sigma)
+cv::Mat calGaussianKernel(int rows, int cols, double sigma)
 {
 	CV_Assert(rows % 2 && cols % 2); // kernel size should be odd number
 	int halfRow = rows / 2, halfCol = cols / 2;
@@ -125,7 +140,46 @@ cv::Mat discreteFourierTrans(const cv::Mat &mat)
  */
 cv::Mat getDFTMagnitudeCentered(const cv::Mat &dftMat)
 {
+	cv::Mat planes[2];
+	cv::split(dftMat, planes); // split the 2-channel image to an array of length 2
+	cv::Mat magnitudeMat;
+	cv::magnitude(planes[0], planes[1], magnitudeMat); // compute the magnitude
 
+	return magnitudeMat;
+}
+
+/**
+ * Display the magnitude of a Fourier transformed mat
+ * @param magnitudeMat cv::Mat &: magnitude
+ * @param winTitle const char *: window title
+ */
+void displayMagnitude(cv::Mat &magnitudeMat, const char *winTitle)
+{
+	magnitudeMat += cv::Scalar::all(1); // log(magnitude + 1) => to make the magnitude more clear to show
+	cv::log(magnitudeMat, magnitudeMat);
+
+	// crop the image if it has odd number of rows of columns
+	// -2 in memory => 11111110, num & -2 => set the lease significant bit as 0 => make num even
+	magnitudeMat = magnitudeMat(cv::Rect(0, 0, magnitudeMat.cols & -2, magnitudeMat.rows & -2));
+
+	int cx = magnitudeMat.cols / 2, cy = magnitudeMat.rows / 2;
+	cv::Mat topLeft = magnitudeMat(cv::Rect(0, 0, cx, cy));
+	cv::Mat topRight = magnitudeMat(cv::Rect(cx, 0, cx, cy));
+	cv::Mat bottomLeft = magnitudeMat(cv::Rect(0, cy, cx, cy));
+	cv::Mat bottomRight = magnitudeMat(cv::Rect(cx, cy, cx, cy));
+
+	// swap the top left with bottom right, top right with bottom left
+	cv::Mat tmp;
+	topLeft.copyTo(tmp);
+	bottomRight.copyTo(topLeft);
+	tmp.copyTo(bottomRight);
+	topRight.copyTo(tmp);
+	bottomLeft.copyTo(topRight);
+	tmp.copyTo(bottomLeft);
+
+	cv::normalize(magnitudeMat, magnitudeMat, 0, 255, cv::NORM_MINMAX);
+	magnitudeMat.convertTo(magnitudeMat, CV_8UC1);
+	cv::imshow(winTitle, magnitudeMat);
 }
 
 /**

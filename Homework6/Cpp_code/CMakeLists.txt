@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 find_package(OpenCV 3.3 REQUIRED)
 
-add_executable(Gaussian_and_inverse src/Gaussian_filter_and_inverse_filter.cpp)
+add_executable(Gaussian_and_inverse src/homework6.cpp)
 target_link_libraries(Gaussian_and_inverse ${OpenCV_LIBS})
 
 add_executable(test src/test.cpp)

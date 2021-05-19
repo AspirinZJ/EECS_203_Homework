@@ -89,13 +89,39 @@ int main(int argc, char **argv)
 	cv::Mat imageDegraded;
 	cv::filter2D(imageSrc, imageDegraded, CV_8U, gaussianKernel, cv::Point(-1, -1), 0, cv::BORDER_REPLICATE);
 
-	cv::Mat imageDegradedDFT = discreteFourierTrans(imageDegraded); // => G
-	cv::Mat gaussianKernelDFT = discreteFourierTrans(gaussianKernel); // => H
+	// cv::Mat imageDegradedDFT = discreteFourierTrans(imageDegraded); // => G
+	// cv::Mat gaussianKernelDFT = discreteFourierTrans(gaussianKernel); // => H
 
 	// F = G / H
 	// todo: align the size
-	cv::Mat imageDFT = complexMatDivision(imageDegradedDFT, gaussianKernelDFT);
+	// cv::Mat imageDFT = complexMatDivision(imageDegradedDFT, gaussianKernelDFT);
+	cv::Size dftSize;
+	dftSize.width = cv::getOptimalDFTSize(imageDegraded.cols + gaussianKernel.cols - 1);
+	dftSize.height = cv::getOptimalDFTSize(imageDegraded.rows + gaussianKernel.rows - 1);
 
+	cv::Mat tempImage(dftSize, imageDegraded.type(), cv::Scalar::all(0));
+	cv::Mat tempGaussian(dftSize, gaussianKernel.type(), cv::Scalar::all(0));
+
+	// copy imageDegraded and gaussianKernel to top left corner
+	cv::Mat roiImage(tempImage, cv::Rect(0, 0, imageDegraded.cols, imageDegraded.rows));
+	imageDegraded.copyTo(roiImage);
+
+	cv::Mat roiGaussian(tempGaussian, cv::Rect(0, 0, gaussianKernel.cols, gaussianKernel.rows));
+	// gaussianKernel.copyTo(tempGaussian);
+	gaussianKernel.copyTo(roiGaussian);
+
+	cv::dft(cv::Mat_<float>(tempImage), tempImage, 0, imageDegraded.rows);
+	cv::dft(cv::Mat_<float>(tempGaussian), tempGaussian, 0, gaussianKernel.rows);
+
+	// cv::divide(tempImage, tempGaussian, tempImage); // G / H => F
+	cv::Mat division = complexMatDivision(tempImage, tempGaussian);
+	cv::Mat imageOut(cv::abs(imageDegraded.rows - gaussianKernel.rows + 1),
+			cv::abs(imageDegraded.cols - gaussianKernel.cols + 1), CV_32FC1);
+	cv::dft(division, imageOut, cv::DFT_INVERSE);
+	cv::normalize(imageOut, imageOut, 0, 255, cv::NORM_MINMAX);
+	imageOut.convertTo(imageOut, CV_8UC1);
+	cv::imshow("output image", imageOut);
+	cv::waitKey(0);
 
 	return EXIT_SUCCESS;
 }

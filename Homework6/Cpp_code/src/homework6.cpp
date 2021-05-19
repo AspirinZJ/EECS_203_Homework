@@ -2,7 +2,7 @@
  *  @author     Jack Zhang
  *  @version    1.0
  *  @date       05/18/2021
- *  @brief      Applay Gaussian filter and do the inverse filtering
+ *  @brief      Apply Gaussian filter and do the inverse filtering
  *  @details    Apply a 31x31 Gaussian filter to the input image, then use the inverse filtering method
  *  			to restore the image
  *  @note       
@@ -52,7 +52,6 @@ int main(int argc, char **argv)
 	// transform the padded imageDegraded and gaussianKernel in-place
 	cv::dft(cv::Mat_<float>(tempImage), tempImage, 0, imageDegraded.rows);
 	cv::dft(cv::Mat_<float>(tempGaussian), tempGaussian, 0, gaussianKernel.rows);
-
 	tempGaussian.inv();
 
 	// todo 4th parameter

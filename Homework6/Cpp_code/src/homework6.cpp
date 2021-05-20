@@ -31,6 +31,7 @@ int main(int argc, char **argv)
 	}
 
 	cv::Mat gaussianKernel = calGaussianKernel(31, 31, 7);
+	std::cout << gaussianKernel << std::endl;
 	cv::Mat imageDegraded;
 	cv::filter2D(imageSrc, imageDegraded, imageSrc.depth(), gaussianKernel, cv::Point(-1, -1), 0, cv::BORDER_REPLICATE);
 	// cv::GaussianBlur(imageSrc, imageDegraded, cv::Size(31, 31), 7, 7, cv::BORDER_REPLICATE);
@@ -49,25 +50,55 @@ int main(int argc, char **argv)
 	cv::Mat roiGaussian(tempGaussian, cv::Rect(0, 0, gaussianKernel.cols, gaussianKernel.rows));
 	gaussianKernel.copyTo(roiGaussian);
 
-	// transform the padded imageDegraded and gaussianKernel in-place
-	cv::dft(cv::Mat_<float>(tempImage), tempImage, 0, imageDegraded.rows);
-	cv::dft(cv::Mat_<float>(tempGaussian), tempGaussian, 0, gaussianKernel.rows);
-	tempGaussian.inv();
+	//	// transform the padded imageDegraded and gaussianKernel in-place
+	//	cv::dft(cv::Mat_<float>(tempImage), tempImage, 0, imageDegraded.rows);
+	//	cv::dft(cv::Mat_<float>(tempGaussian), tempGaussian, 0, gaussianKernel.rows);
+	//	tempGaussian.inv();
+	//
+	//	// todo 4th parameter
+	//	cv::mulSpectrums(tempImage, tempGaussian, tempImage, cv::DFT_ROWS);
+	//
+	//	cv::Mat imageOut;
+	//	imageOut.create(cv::abs(imageDegraded.rows - gaussianKernel.rows) + 1,
+	//			cv::abs(imageDegraded.cols - gaussianKernel.cols) + 1, imageDegraded.type());
+	//	cv::dft(tempImage, tempImage, cv::DFT_INVERSE | cv::DFT_SCALE, imageOut.rows);
+	//
+	//	tempImage(cv::Rect(0, 0, imageOut.cols, imageOut.rows)).copyTo(imageOut);
 
-	// todo 4th parameter
-	cv::mulSpectrums(tempImage, tempGaussian, tempImage, cv::DFT_ROWS);
+	cv::dft(cv::Mat_<float>(tempImage), tempImage, cv::DFT_COMPLEX_OUTPUT);
+	cv::dft(cv::Mat_<float>(tempGaussian), tempGaussian, cv::DFT_COMPLEX_OUTPUT);
 
-	cv::Mat imageOut;
-	imageOut.create(cv::abs(imageDegraded.rows - gaussianKernel.rows) + 1,
-			cv::abs(imageDegraded.cols - gaussianKernel.cols) + 1, imageDegraded.type());
-	cv::dft(tempImage, tempImage, cv::DFT_INVERSE | cv::DFT_SCALE, imageOut.rows);
+	cv::Mat imageOut = complexImagesDivision(tempImage, tempGaussian);
 
-	tempImage(cv::Rect(0, 0, imageOut.cols, imageOut.rows)).copyTo(imageOut);
-
+	cv::dft(imageOut, imageOut, cv::DFT_INVERSE | cv::DFT_REAL_OUTPUT);
 	cv::normalize(imageOut, imageOut, 0, 255, cv::NORM_MINMAX);
 	imageOut.convertTo(imageOut, CV_8UC1);
+
 	cv::imshow("output image", imageOut);
 
+	//	cv::Mat temp1(2, 2, CV_32FC1), temp2(2, 2, CV_32FC1),
+	//	temp3(2, 2, CV_32FC1),temp4(2, 2, CV_32FC1);
+	//	for (int row = 0; row < 2; ++row)
+	//	{
+	//		for (int col = 0; col < 2; ++col)
+	//		{
+	//			temp1.at<float>(row, col) = row + 1.0 + col;
+	//			temp2.at<float>(row, col) = row + 2.0 + col;
+	//			temp3.at<float>(row, col) = -row + 1.0 + col;
+	//			temp4.at<float>(row, col) = -row + 2.0 + col;
+	//		}
+	//	}
+	//	cv::Mat planesA[2] = {temp1, temp2};
+	//	cv::Mat planesB[2] = {temp3, temp4};
+	//
+	//	cv::Mat matA, matB;
+	//	cv::merge(planesA, 2, matA);
+	//	cv::merge(planesB, 2, matB);
+	//	std::cout << matA << std::endl << std::endl;
+	//	std::cout << matB << std::endl << std::endl;
+	//
+	//	cv::Mat matC = complexImagesDivision(matA, matB);
+	//	std::cout << matC << std::endl;
 
 	cv::waitKey(0);
 	return 0;

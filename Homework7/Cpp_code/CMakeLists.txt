@@ -6,5 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(OpenCV 3.3 REQUIRED)
 
 add_executable(rgb src/rgb_image.cpp)
-
 target_link_libraries(rgb ${OpenCV_LIBS})
+
+add_executable(question1 src/question1.cpp)
+target_link_libraries(question1 ${OpenCV_LIBS})

@@ -1,0 +1,7 @@
+# find_package(Threads REQUIRED)
+# target_link_libraries(threading_demo Threads::Threads)
+add_executable(base base_usage.cpp)
+add_executable(inherent_type inherent_type.cpp)
+add_executable(object_model object_model.cpp)
+add_executable(sequence_of_constructor_and_destructor sequence_of_constructor_and_destructor.cpp)
+add_executable(same_name_demo same_name_demo.cpp)

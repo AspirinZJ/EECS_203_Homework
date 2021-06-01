@@ -38,6 +38,7 @@ add_executable(speed_test src/speed_test_OpenCV.cpp)
 target_link_libraries(speed_test ${OpenCV_LIBS})
 
 add_subdirectory(src/Cpp)
+add_subdirectory(src/inherent)
 
 add_executable(laplacian src/laplacian.cpp)
 target_link_libraries(laplacian ${OpenCV_LIBS})
@@ -47,3 +48,6 @@ target_link_libraries(homework5 ${OpenCV_LIBS})
 
 add_executable(homework6 src/homework6.cpp)
 target_link_libraries(homework6 ${OpenCV_LIBS})
+
+add_executable(question1 src/question1)
+target_link_libraries(question1 ${OpenCV_LIBS})
